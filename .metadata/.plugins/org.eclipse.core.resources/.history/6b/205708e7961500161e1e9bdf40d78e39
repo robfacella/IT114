@@ -1,0 +1,244 @@
+package chat;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
+import chat.ChatMessage;
+
+public class Client extends Frame{
+	ChatMessage myObject;
+	Socket socketToServer;
+	public ObjectOutputStream myOutputStream;
+	ObjectInputStream myInputStream;
+	Boolean receivingdone = false;
+	boolean sendingdone = false;
+	GoodPanel pan;
+	
+	public Client(){
+
+		setSize(1000,500);
+		setLocationRelativeTo(null);
+		setTitle("Bill and Ted's Excellent ChatFrame");
+		addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent we){
+				System.exit(0);
+			}
+		});
+		pan = new GoodPanel();
+		add(pan);
+		setVisible(true);
+	
+	}
+	public static void main(String [] args)
+	{
+		Client c = new Client();
+	}
+}
+////////////////////////////////////////////////////////////////////////////////
+class GoodPanel extends Panel implements Runnable, ActionListener{
+	
+	Panel chatPanel;
+	DrawPanel dPanel;
+	Panel buttonPanel;
+	List list;
+	TextArea ta;
+	TextField tf;
+	Button connect;
+	Button disconnect;
+	
+	String username;
+	
+	Socket socketToServer;
+	public ObjectOutputStream myOutputStream;
+	ObjectInputStream myInputStream;
+	Boolean receivingdone = false;
+	boolean sendingdone = false;
+	
+	
+	public GoodPanel(){
+		setLayout(new BorderLayout());
+		
+		list = new List();
+		list.add("Bill");
+		list.add("Ted");
+		add(list, BorderLayout.WEST);
+		
+		chatPanel = new Panel();
+		chatPanel.setLayout(new BorderLayout());
+		tf = new TextField();
+		tf.addActionListener(this);
+		ta = new TextArea();
+		chatPanel.add(tf, BorderLayout.NORTH);
+		chatPanel.add(ta, BorderLayout.CENTER);
+		add(chatPanel, BorderLayout.CENTER);
+		
+		dPanel = new DrawPanel();
+		add(dPanel, BorderLayout.EAST);
+		
+		buttonPanel = new Panel();
+		connect = new Button("Connect");
+		disconnect = new Button("Disconnect");
+		disconnect.setEnabled(false);
+		buttonPanel.add(connect);
+		connect.addActionListener(this);
+		disconnect.addActionListener(this);
+		buttonPanel.add(disconnect);
+		add(buttonPanel, BorderLayout.SOUTH);
+		
+		
+	}
+	
+	public void disconnect() {
+		ChatMessage text = new ChatMessage();
+		text.setMessage(username + " has disconnected.");
+		try{
+			myOutputStream.reset();
+			myOutputStream.writeObject(text);
+		}catch(IOException ioe){
+			System.out.println(ioe.getMessage());
+		}	
+		text.setMessage("bye");
+		try{
+			myOutputStream.reset();
+			myOutputStream.writeObject(text);
+			disconnect.setEnabled(false);
+			connect.setEnabled(true);
+		}catch(IOException ioe){
+			System.out.println(ioe.getMessage());
+		}	
+	}
+	public void connect()
+	{
+		try{						
+
+			//scan = new Scanner(System.in);
+
+			//myObject = new ChatMessage();
+			username = tf.getText();
+			tf.setText("");
+			
+			
+			socketToServer = new Socket("127.0.0.1", 4000);
+
+			myOutputStream =
+				new ObjectOutputStream(socketToServer.getOutputStream());
+
+			myInputStream =
+				new ObjectInputStream(socketToServer.getInputStream());
+			
+			System.out.println("Client Connected");
+			disconnect.setEnabled(true);
+			connect.setEnabled(false);
+			
+			
+			
+			Thread cat = new Thread(this);
+			cat.start();
+			
+			ChatMessage text = new ChatMessage();
+			text.setMessage(username + " joined the room.");
+			try{
+				myOutputStream.reset();
+				myOutputStream.writeObject(text);
+			}catch(IOException ioe){
+				System.out.println(ioe.getMessage());
+			}	
+		}
+		catch(Exception e){
+			System.out.println(e.getMessage());	
+        }
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent ae) {
+		if(ae.getSource() == tf){
+			ChatMessage text = new ChatMessage();
+			text.setMessage(username + ": " + tf.getText());
+			tf.setText("");
+			try{
+				myOutputStream.reset();
+				myOutputStream.writeObject(text);
+			}catch(IOException ioe){
+				System.out.println(ioe.getMessage());
+			}
+		}
+		else if (ae.getSource() == connect)
+		{
+			connect();
+		}
+		else if (ae.getSource() == disconnect)
+		{
+			disconnect();
+		}
+	}
+
+
+
+
+
+	@Override
+	public void run() {
+		System.out.println("Listening for messages from server . . . ");
+		try{
+			while(!receivingdone){
+				ChatMessage myObject = (ChatMessage)myInputStream.readObject();
+               	if(myObject.getMessage().startsWith("lIsTuPdAtEs")){
+               		list.removeAll();
+               		String [] temp = myObject.getMessage().split(" ");
+               		for (int i = 1; i < temp.length; i++)
+               		{
+               			list.add(temp[i]);
+               		}
+               	}
+               	else
+               		ta.append(myObject.getMessage() + "\n");
+
+			}
+		}catch(IOException ioe){
+			System.out.println("IOE: " + ioe.getMessage());
+		}catch(ClassNotFoundException cnf){
+			System.out.println(cnf.getMessage());
+		}
+		
+	}
+}
+
+class DrawPanel extends Panel{
+	
+	Dimension minimum;
+	Dimension preferred;
+	Panel drawPanel;
+	Panel buttonPanel;
+	
+		public DrawPanel(){
+			setLayout(new BorderLayout());
+			minimum = new Dimension(200,200);
+			preferred = new Dimension(500,500);
+			
+			drawPanel = new Panel();
+			buttonPanel = new Panel();
+			Button red = new Button("Red");
+			Button green = new Button("Green");
+			Button blue = new Button("Blue");
+			Button cyan = new Button("Cyan");
+			Button magenta = new Button("Magenta");
+			buttonPanel.add(red);
+			buttonPanel.add(green);
+			buttonPanel.add(blue);
+			buttonPanel.add(cyan);
+			buttonPanel.add(magenta);
+			add(buttonPanel, BorderLayout.SOUTH);
+			add(drawPanel, BorderLayout.CENTER);
+			
+		}
+		public Dimension getMinimumSize(){
+			return minimum;
+		}
+		public Dimension getPreferredSize(){
+			return preferred;
+		}
+}

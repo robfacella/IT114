@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;DoubleBuffer.java&apos; to &apos;Chat Program/src/chat&apos;&#x0D;&#x0A;- Original project: &apos;DoubleBuffer&apos;&#x0D;&#x0A;- Destination element: &apos;Chat Program/src/chat&apos;&#x0D;&#x0A;- Original element: &apos;DoubleBuffer.java&apos;" description="Copy compilation unit" destination="=Chat Program/src&lt;chat" element1="/src&lt;{DoubleBuffer.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1462770212780" units="1" version="1.0"/>
+</session>

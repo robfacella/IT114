@@ -1,0 +1,3 @@
+javac *.java complies all files in directory
+
+java <program name (case sensitive)>
